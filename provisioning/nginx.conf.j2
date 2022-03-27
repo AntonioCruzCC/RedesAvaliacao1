@@ -1,0 +1,9 @@
+server {
+  listen 80;
+  listen [::]:80;
+  server_name avaliacao1.com;
+  root /var/www/avaliacao1.com;
+  location / {
+    try_files $uri $uri/ =404;
+  }
+}

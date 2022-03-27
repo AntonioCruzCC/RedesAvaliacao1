@@ -1,0 +1,50 @@
+---
+- name: deploy
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: apt update
+      apt:  update_cache=yes
+            force_apt_get=yes
+            cache_valid_time=3600
+
+    - name: apt upgrade
+      apt:  upgrade=dist
+            force_apt_get=yes
+
+    - name: install apache
+      apt:
+        name:   ['apache2']
+        state:  latest
+    
+    - name: create www directory
+      copy:
+        src:  ../avaliacao1.com
+        dest: /var/www/
+        mode: '0775'
+        owner: "vagrant"
+        group: "vagrant"
+
+    - name: copy apache site.conf
+      ansible.builtin.copy:
+        src: apache.conf.j2
+        dest: /etc/apache2/sites-available/avaliacao1.com.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Reload Apache
+
+    - name: Disable default site
+      shell: /usr/sbin/a2dissite 000-default.conf
+      notify: Reload Apache
+
+    - name: Enable new site
+      shell: /usr/sbin/a2ensite avaliacao1.com.conf
+      notify: Reload Apache
+
+  handlers:
+    - name: Reload Apache
+      service:
+        name: apache2
+        state: restarted

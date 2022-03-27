@@ -1,0 +1,48 @@
+---
+- name: deploy
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: apt update
+      apt:  update_cache=yes
+            force_apt_get=yes
+            cache_valid_time=3600
+
+    - name: apt upgrade
+      apt:  upgrade=dist
+            force_apt_get=yes
+
+    - name: install nginx
+      apt:
+        name:   ['nginx']
+        state:  latest
+    
+    - name: create www directory
+      copy:
+        src:  ../avaliacao1.com
+        dest: /var/www/
+        mode: '0775'
+        owner: "vagrant"
+        group: "vagrant"
+
+    - name: delete default nginx site
+      file:
+        path: /etc/nginx/sites-available/default
+        state: absent
+      notify: restart nginx
+
+    - name: copy nginx site.conf
+      ansible.builtin.copy:
+        src: nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart nginx
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
