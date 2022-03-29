@@ -1,38 +1,48 @@
+#PLAYBOOK
 ---
+#PLAY
 - name: deploy
   hosts: all
   gather_facts: false
   become: true
+  #TASKS  
   tasks:
+    #RUN APT UPDATE
     - name: apt update
+      #ACTION
       apt:  update_cache=yes
             force_apt_get=yes
             cache_valid_time=3600
-
+    #RUN APT UPGRADE
     - name: apt upgrade
+      #ACTION
       apt:  upgrade=dist
             force_apt_get=yes
-
+    #RUN APT INSTALL NGINX
     - name: install nginx
+      #ACTION
       apt:
         name:   ['nginx']
         state:  latest
-    
+    #CREATE FOLDER avaliacao1.com ON /var/www/ INSIDE THE BOX
     - name: create www directory
+      #ACTION
       copy:
         src:  ../avaliacao1.com
         dest: /var/www/
         mode: '0775'
         owner: "vagrant"
-        group: "vagrant"
-
+        group: "vagrant"#DEFINE PATH TO THE ANSIBLE PLAYBOOK
+    #DELETE THE DEFAULT NGINX SITE CONFIGURATION
     - name: delete default nginx site
+      #ACTION
       file:
         path: /etc/nginx/sites-available/default
         state: absent
       notify: restart nginx
-
+    #CREATE THE SITE CONFIGURATION (nginx.conf.j2) TO SERVE WHATS INSIDE /var/www/avaliacao1.com
     - name: copy nginx site.conf
+      #ACTION
       ansible.builtin.copy:
         src: nginx.conf.j2
         dest: /etc/nginx/sites-available/default
@@ -42,6 +52,7 @@
       notify: restart nginx
 
   handlers:
+    #RESTART THE NGINX SERVICE
     - name: restart nginx
       service:
         name: nginx

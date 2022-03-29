@@ -1,32 +1,41 @@
+#PLAYBOOK
 ---
+#PLAY
 - name: deploy
   hosts: all
   gather_facts: false
   become: true
+  #TASKS
   tasks:
+    #RUN APT UPDATE
     - name: apt update
+      #ACTION
       apt:  update_cache=yes
             force_apt_get=yes
             cache_valid_time=3600
-
+    #RUN APT UPGRADE
     - name: apt upgrade
+      #ACTION
       apt:  upgrade=dist
             force_apt_get=yes
-
+    #RUN APT INSTALL APACHE2
     - name: install apache
+      #ACTION
       apt:
         name:   ['apache2']
         state:  latest
-    
+    #CREATE FOLDER avaliacao1.com ON /var/www/ INSIDE THE BOX
     - name: create www directory
+      #ACTION
       copy:
         src:  ../avaliacao1.com
         dest: /var/www/
         mode: '0775'
         owner: "vagrant"
         group: "vagrant"
-
+    #CREATE THE SITE CONFIGURATION (apache.conf.j2) TO SERVE WHATS INSIDE /var/www/avaliacao1.com
     - name: copy apache site.conf
+      #ACTION
       ansible.builtin.copy:
         src: apache.conf.j2
         dest: /etc/apache2/sites-available/avaliacao1.com.conf
@@ -34,16 +43,19 @@
         group: root
         mode: '0644'
       notify: Reload Apache
-
+    #DISABLE APACHE'S DEFAULT SITE
     - name: Disable default site
+      #ACTION
       shell: /usr/sbin/a2dissite 000-default.conf
       notify: Reload Apache
-
+    #ENABLE THE NEW SITE TO SERVE WHATS INSIDE /var/www/avaliacao1.com
     - name: Enable new site
+      #ACTION
       shell: /usr/sbin/a2ensite avaliacao1.com.conf
       notify: Reload Apache
 
   handlers:
+    #RESTART APACHE SERVICE
     - name: Reload Apache
       service:
         name: apache2
